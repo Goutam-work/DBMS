@@ -1,0 +1,162 @@
+Create a table named tblEmp and insert some data by using following script:
+
+CREATE TABLE [dbo].[tblEmp](
+    [ntEmpID] [bigint] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [vcName] [varchar](100) NULL,
+    [vcMobieNumer] [varchar](15) NULL,
+    [vcSkills] [varchar](max) NULL,
+    [moSalary] [money] DEFAULT(0) NOT NULL,
+    [ntLevel] [bit] DEFAULT(0) NOT NULL
+)
+
+--Inserting demo data
+INSERT [dbo].[tblEmp] VALUES
+    ('Scott','123-456-3456','CF,HTML,JavaScript',50,0),
+    ('Greg',NULL,'HTML5,JavaScript,Jquery',80,0),
+    ('David','123-456-3458','Sql,JavaScript',30,1),
+    ('Alan','123-456-3459','C#,VB,XQuery',60,1),
+    ('Jhon',NULL,'XML,HTML',80,1),
+    ('Alan','123-456-3461','Sql,Oracle,DB2',70,1)
+        
+
+Assignment:
+
+/* SELECT Clause  */
+
+1. Write a single sql query with following information's:
+
+a. Total number number of employees
+b. Minimum salary received by any employees.
+c. Total distinct ntLevel
+
+Ans:-SELECT COUNT(ntEmpID),MIN(moSalary),COUNT(DISTINCT(ntLevel)) FROM tblEmp; 
+           
+/* FROM clause */
+
+2. Correct this query:
+
+    SELECT [ntEmpID], E.[vcName],tblEmp.[vcMobieNumer]
+    FROM tblEmp E
+Ans:-SELECT [ntEmpID], E.[vcName],E.[vcMobieNumer]FROM tblEmp AS E;
+        
+/* WHERE clause */
+        
+3. Write a single select query which satisfies the following conditions:
+    a. If any employee does not have a phone number then select that employee if ntLevel  equal to 1
+    b. else select those employees whose ntLevel is equal to 0   
+        
+Ans:-SELECT * FROM tblEmp WHERE (vcMobieNumer is NULL AND ntLevel=1) OR (vcMobieNumer is NOT NULL AND ntLevel=0);
+    
+/*  ORDER BY clause */
+
+4.  Write a sql query which displays those employee data first, who knows javascript.
+
+Ans:-SELECT * FROM tblEmp ORDER BY CASE WHEN vcSkills LIKE '%JavaScript%' THEN 1 ELSE 2 END;
+        
+/* TOP  clause */
+    
+5. Explain the TOP clause in the following sql queries?
+    
+    a. SELECT TOP(1) * FROM tblEmp 
+	ANS:-Selects first 1 row from table tblEmp. 
+    b. SELECT TOP(SELECT 3/2) * FROM tblEmp 
+	ANS:-Selects first (integer value of(3/2)=1) rows from table tblEmp.
+    c. SELECT TOP(1) PERCENT * FROM tblEmp
+	ANS:-Selects first 1 percent(nearest greatest integer) of rows from table tblEmp.
+    d. SELECT TOP(1) WITH TIES * FROM tblEmp ORDER BY vcName
+	ANS:-Selects first 1 row(s) from table tblEmp in Ascending Order of vcName and also selects the row which has same vcName as the Selected row.So,in this case,it shows 2 rows with same vcName.
+        
+/* GROUP BY/HAVING I know we did not discuss this, but do if you can!*/
+
+6. When I executed this query:
+           
+   SELECT [vcName],[vcMobieNumer] FROM [dbo].[tblEmp] GROUP BY [vcName]
+           
+    I got following error message:
+    Column 'dbo.tblEmp.vcMobieNumer' is invalid in the select list because it is not contained in either an aggregate function or the GROUP BY clause.
+
+    Can you explain above error message? Write at least two possible solutions. 
+	
+	ANS:-the GROUP BY clause is used along with the Aggregate functions like COUNT(),AVG(),MAX(),MIN() etc.. or use such select conditions which return a single value. eg:-
+			SELECT AVG(moSalary),[vcName] FROM [dbo].[tblEmp] GROUP BY [vcName];
+			SELECT [vcName] FROM [dbo].[tblEmp] GROUP BY [vcName];
+
+ 
+        
+7. Write a sql query to get the ntLevel of the employees getting salary greater than average salary.
+	ANS:-SELECT ntLevel FROM tblEmp WHERE moSalary>(SELECT AVG(moSalary) FROM tblEmp);
+          
+Do the following questions using AdventureWorks DB
+-------------------------------------------------------
+8. Write a query to get the count of employees with a valid Suffix 
+ANS:-		use AdventureWorks2012;
+		SELECT COUNT(Suffix) FROM Person.Person WHERE Suffix IS NOT NULL;
+
+
+9. Using BusinessEntityAddress table (and other tables as required), list the full name of people living in the state of Florida
+
+ANS:-	use AdventureWorks2012;
+	SELECT P.FirstName,P.MiddleName,P.LastName FROM
+	((( Person.Person AS P INNER JOIN Person.BusinessEntityAddress AS B ON P.BusinessEntityID=B.BusinessEntityID)
+	INNER JOIN Person.Address AS A ON B.AddressID=A.AddressID)
+	INNER JOIN Person.StateProvince AS S ON A.StateProvinceID=S.StateProvinceID)
+	 WHERE S.Name='Florida';
+
+
+10. Show the CompanyName for James D. Kramer
+	For each order show the SalesOrderID and SubTotal calculated two ways:
+A) From the SalesOrderHeader
+B) Sum of OrderQty*UnitPrice
+All above must be in 1 query.
+
+ANS:-	SELECT D.SalesOrderID,H.SubTotal,SUM(D.OrderQty*D.UnitPrice) AS Subtotal FROM Sales.SalesOrderDetail AS D 
+	INNER JOIN Sales.SalesOrderHeader AS H ON D.SalesOrderID=H.SalesOrderID GROUP BY D.SalesOrderID,H.SubTotal;
+
+
+11. "Single Item Order" is a customer order where only one item is ordered. Show the SalesOrderID and the UnitPrice for every Single Item Order.
+
+ANS:-SELECT SalesOrderID,UnitPrice FROM Sales.SalesOrderDetail WHERE OrderQty=1;
+
+12. Show the product description for culture 'fr' for product with ProductID 736.
+
+ANS:-SELECT D.Description FROM 
+	((Production.ProductDescription AS D
+	INNER JOIN Production.ProductModelProductDescriptionCulture AS M ON D.ProductDescriptionID=M.ProductDescriptionID)
+	INNER JOIN Production.Product AS P ON P.ProductModelID=M.ProductModelID) 
+	WHERE M.CultureID='fr' AND P.ProductID=736;
+
+13. Show OrdeQty, the Name and the ListPrice of the order made by CustomerID 635
+	
+ANS:-	SELECT D.OrderQty,P.Name,P.ListPrice FROM ((Production.Product AS P 
+	INNER JOIN Sales.SalesOrderDetail AS D ON P.ProductID=D.ProductID)
+	INNER JOIN Sales.SalesOrderHeader AS H ON D.SalesOrderID=H.SalesOrderID)
+ 	WHERE H.CustomerID=635;
+
+14. How many products in ProductSubCategory 'Cranksets' have been sold to an address in 'London'?
+	
+ANS:- 	SELECT SUM(D.OrderQty) FROM
+  	((((Sales.SalesOrderHeader AS H INNER JOIN Person.Address AS A ON H.ShipToAddressID=A.AddressID)
+  	INNER JOIN Sales.SalesOrderDetail AS D ON H.SalesOrderID=D.SalesOrderID)
+  	INNER JOIN Production.Product AS P ON D.ProductID=P.ProductID)
+  	INNER JOIN Production.ProductSubcategory AS S ON S.ProductSubcategoryID=P.ProductSubcategoryID)
+  	WHERE A.City='London' and s.Name='Cranksets' ;
+
+15. Describe Char, Varchar and NVarChar datatypes with examples. 
+
+ANS:- NvarChar can store unicode values but Char and Varchar cannot.
+Char is a fixed width data type.It will reserve the storage space specified by the user even if it is not used. 
+Varchar and NVarchar will only use up spaces to store values.It won't reserve spaces like Char.
+storage size of :-
+char=Defined Width
+Varchar=2 bytes + number of chars
+NVarchar=2 bytes + Twice the no. of chars
+eg:-
+
+	CREATE TABLE Test(
+	Column_1 CHAR (10),
+	Column_2 VARCHAR(10),
+	Column_3 NVARCHAR(10),
+	);
+	INSERT INTO Test
+	VALUES("string 1","string 2","Some unicode");
+
